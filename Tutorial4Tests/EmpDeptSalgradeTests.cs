@@ -35,8 +35,8 @@ public class EmpDeptSalgradeTests
     {
         var emps = Database.GetEmps();
         var depts = Database.GetDepts();
-
-        // List<Emp> result = emps.Where(e => depts.Where(d => d.Loc == "Chicago").Contains(e.DeptNo)).ToList(); 
+        
+        // List<Emp> result = null; 
         //
         // Assert.All(result, e => Assert.Equal(30, e.DeptNo));
     }
@@ -102,9 +102,9 @@ public class EmpDeptSalgradeTests
         var emps = Database.GetEmps();
         var grades = Database.GetSalgrades();
 
-        // var result = null;
-        //
-        // Assert.Contains(result, r => r.EName == "ALLEN" && r.Grade == 3);
+        var result = from e in emps from g in grades where e.Sal <= g.Hisal && e.Sal >= g.Losal select new { e.EName, g.Grade }; 
+        
+        Assert.Contains(result, r => r.EName == "ALLEN" && r.Grade == 3);
     }
 
     // 9. Aggregation (AVG)

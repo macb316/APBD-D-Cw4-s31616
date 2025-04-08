@@ -22,7 +22,7 @@ public class EmpDeptSalgradeTests
     {
         var emps = Database.GetEmps();
 
-        List<Emp> result = emps.Where(e => e.DeptNo == 30).OrderBy(e => e.Sal).ToList(); 
+        List<Emp> result = emps.Where(e => e.DeptNo == 30).OrderByDescending(e => e.Sal).ToList(); 
 
         Assert.Equal(2, result.Count);
         Assert.True(result[0].Sal >= result[1].Sal);
@@ -36,9 +36,8 @@ public class EmpDeptSalgradeTests
         var emps = Database.GetEmps();
         var depts = Database.GetDepts();
 
-        List<Emp> result = from e in emps
-        where e.DeptNo = (from d in depts where d.Loc == "Chicago" select d.DeptNo)
-        select e;
+        List<Dept> subquery = depts.Where(d => d.Loc == "Chicago").ToList();
+        List<Emp> result = emps.Where(e => subquery.Select(d => d.DeptNo).Contains(e.DeptNo)).ToList();
         
         Assert.All(result, e => Assert.Equal(30, e.DeptNo));
     }
@@ -117,7 +116,7 @@ public class EmpDeptSalgradeTests
         var emps = Database.GetEmps();
 
         var result = emps.GroupBy(e => e.DeptNo).Select(g => new {
-            Deptno = g.DeptNo,
+            DeptNo = g.Key,
             AvgSal = g.Average(s => s.Sal)
         }); 
         
@@ -132,11 +131,11 @@ public class EmpDeptSalgradeTests
         var emps = Database.GetEmps();
 
         var subquery = emps.GroupBy(e => e.DeptNo).Select(g => new {
-            Deptno = g.DeptNo,
+            DeptNo = g.Key,
             AvgSal = g.Average(s => s.Sal)
         }); 
         var result = emps.Join(subquery,
-         e => e.Deptno, s => s.DeptNo, 
+         e => e.DeptNo, s => s.DeptNo, 
          (e, s) => new {Emp = e, Ass = s}).Where(e => e.Emp.Sal > e.Ass.AvgSal).Select(e => e.Emp.EName);
         
         Assert.Contains("ALLEN", result);

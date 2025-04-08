@@ -33,7 +33,7 @@ public class AdvancedEmpDeptTests
     {
         var emps = Database.GetEmps();
 
-        var firstTwo = emps.OrderBy(e => e.HireDate).Take(2); 
+        var firstTwo = emps.OrderBy(e => e.HireDate).Take(2).ToList(); 
         
         Assert.Equal(2, firstTwo.Count);
         Assert.True(firstTwo[0].HireDate <= firstTwo[1].HireDate);
@@ -46,7 +46,7 @@ public class AdvancedEmpDeptTests
     {
         var emps = Database.GetEmps();
 
-        var jobs = emps.Select(e => e.Job).Distinct(); 
+        var jobs = emps.Select(e => e.Job).Distinct().ToList(); 
         
         Assert.Contains("PRESIDENT", jobs);
         Assert.Contains("SALESMAN", jobs);
@@ -95,7 +95,7 @@ public class AdvancedEmpDeptTests
     {
         var emps = Database.GetEmps();
 
-        var result = emps.Join(emps, e1 => e1.Mgr, e2 => e2.EmpNo, (e1, e2) => new { Employee = e1.EName, Manager = e2.Ename });
+        var result = emps.Join(emps, e1 => e1.Mgr, e2 => e2.EmpNo, (e1, e2) => new { Employee = e1.EName, Manager = e2.EName });
         
         Assert.Contains(result, r => r.Employee == "SMITH" && r.Manager == "FORD");
     }
@@ -107,7 +107,7 @@ public class AdvancedEmpDeptTests
     {
         var emps = Database.GetEmps();
 
-        var result = emps.select(e => new { EName = e.Ename, Total = (e.Comm ?? 0) + e.Sal }); 
+        var result = emps.Select(e => new { EName = e.EName, Total = (e.Comm ?? 0) + e.Sal }).ToList(); 
         
         Assert.Contains(result, r => r.EName == "ALLEN" && r.Total == 1900);
     }
@@ -121,8 +121,8 @@ public class AdvancedEmpDeptTests
         var depts = Database.GetDepts();
         var grades = Database.GetSalgrades();
 
-        // var result = null; 
-        //
-        // Assert.Contains(result, r => r.EName == "ALLEN" && r.DName == "SALES" && r.Grade == 3);
+        var result = from e in emps join d in depts on e.DeptNo equals d.DeptNo from g in grades where e.Sal <= g.Hisal && e.Sal >= g.Losal select new { e.EName, d.DName, g.Grade }; ; 
+        
+        Assert.Contains(result, r => r.EName == "ALLEN" && r.DName == "SALES" && r.Grade == 3);
     }
 }

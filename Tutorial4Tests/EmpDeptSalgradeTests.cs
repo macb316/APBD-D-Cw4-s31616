@@ -35,10 +35,12 @@ public class EmpDeptSalgradeTests
     {
         var emps = Database.GetEmps();
         var depts = Database.GetDepts();
+
+        List<Emp> result = from e in emps
+        where e.DeptNo = (from d in depts where d.Loc == "Chicago" select d.DeptNo)
+        select e;
         
-        // List<Emp> result = null; 
-        //
-        // Assert.All(result, e => Assert.Equal(30, e.DeptNo));
+        Assert.All(result, e => Assert.Equal(30, e.DeptNo));
     }
 
     // 4. SELECT projection
@@ -89,9 +91,9 @@ public class EmpDeptSalgradeTests
     {
         var emps = Database.GetEmps();
 
-        // var result = null; 
-        //
-        // Assert.All(result, r => Assert.NotNull(r.Comm));
+        var result = from e in emps where e.Comm is not null select new {e.EName, e.Comm};
+        
+        Assert.All(result, r => Assert.NotNull(r.Comm));
     }
 
     // 8. Join with Salgrade
@@ -114,9 +116,12 @@ public class EmpDeptSalgradeTests
     {
         var emps = Database.GetEmps();
 
-        // var result = null; 
-        //
-        // Assert.Contains(result, r => r.DeptNo == 30 && r.AvgSal > 1000);
+        var result = emps.GroupBy(e => e.DeptNo).Select(g => new {
+            Deptno = g.DeptNo,
+            AvgSal = g.Average(s => s.Sal)
+        }); 
+        
+        Assert.Contains(result, r => r.DeptNo == 30 && r.AvgSal > 1000);
     }
 
     // 10. Complex filter with subquery and join
@@ -126,8 +131,14 @@ public class EmpDeptSalgradeTests
     {
         var emps = Database.GetEmps();
 
-        // var result = null; 
-        //
-        // Assert.Contains("ALLEN", result);
+        var subquery = emps.GroupBy(e => e.DeptNo).Select(g => new {
+            Deptno = g.DeptNo,
+            AvgSal = g.Average(s => s.Sal)
+        }); 
+        var result = emps.Join(subquery,
+         e => e.Deptno, s => s.DeptNo, 
+         (e, s) => new {Emp = e, Ass = s}).Where(e => e.Emp.Sal > e.Ass.AvgSal).Select(e => e.Emp.EName);
+        
+        Assert.Contains("ALLEN", result);
     }
 }
